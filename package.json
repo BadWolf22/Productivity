@@ -5,7 +5,8 @@
   "main": "server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node server.js"
+    "start": "node server.js",
+    "watch": "npx nodemon start"
   },
   "repository": {
     "type": "git",
@@ -23,6 +24,8 @@
   },
   "homepage": "https://github.com/BadWolf22/Productivity#readme",
   "dependencies": {
-    "express": "^5.2.1"
+    "connect-livereload": "^0.6.1",
+    "express": "^5.2.1",
+    "livereload": "^0.10.3"
   }
 }

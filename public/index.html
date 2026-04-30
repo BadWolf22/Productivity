@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>✅ToDone</title>
+    </head>
+    <body>
+        <input id="todo_date" type="date" onchange="setLoading('todo_viewer', getTodoForDate(this.value).then(showTodos))"/>
+        <div id="todo_viewer"></div>
+        <input id="todo_input" type="text"/>
+        <input id="todo_submit" type="button" value="Create!" onclick="submitTodo()"/>
+        
+        <script>
+            const todoViewer = document.getElementById("todo_viewer");
+            const todoInput = document.getElementById("todo_input");
+
+            async function getTodoForDate(date) {
+                let req = new Request(`./todos?date=${encodeURIComponent(date)}`);
+                let todos = await fetch(req).then(res => res.json());
+                return todos;
+            }
+
+            async function showTodos(todos) {
+                todoViewer.innerHTML = `<h1>${todos.date}</h1>`;
+                for (let todo of todos.todos) {
+                    let elem = document.createElement("p");
+                    if (todo.status == 2) elem.innerText = "✅ ";
+                    else if (todo.status == 1) elem.innerText = "ℹ️ ";
+                    else if (todo.status == 0) elem.innerText = "⭕ ";
+                    elem.innerText += todo.text;
+                    todoViewer.appendChild(elem);
+                }
+            }
+
+            function setLoading(id, asyncLambda) {
+                let elem = document.getElementById(id);
+                elem.innerHTML = "<p>Loading...</p>";
+                asyncLambda();
+            }
+
+            function submitTodo() {
+                let text = todoInput.value;
+                if (text.trim() == "") return;
+                todoInput.value = "";
+                // TODO: put to server
+                let elem = document.createElement("p");
+                elem.innerText = `⭕ ${text}`;
+                todoViewer.appendChild(elem);
+            }
+        </script>
+        <script>
+            let dateInput = document.getElementById("todo_date");
+            dateInput.valueAsDate = new Date();
+            const event = new Event('change', { bubbles: true });
+            dateInput.dispatchEvent(event);
+        </script>
+    </body>
+</html>
