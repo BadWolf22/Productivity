@@ -1,0 +1,28 @@
+{
+  "name": "productivity",
+  "version": "1.0.0",
+  "description": "It is easy to be blind to how you spend your time. Track it. Plan it. Change it.",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/BadWolf22/Productivity.git"
+  },
+  "keywords": [
+    "todo",
+    "productivity",
+    "time-blindness"
+  ],
+  "author": "BadWolf22",
+  "license": "UNLICENSED",
+  "bugs": {
+    "url": "https://github.com/BadWolf22/Productivity/issues"
+  },
+  "homepage": "https://github.com/BadWolf22/Productivity#readme",
+  "dependencies": {
+    "express": "^5.2.1"
+  }
+}
