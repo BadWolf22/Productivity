@@ -38,16 +38,18 @@ app.get('/todos', async (req, res) => {
 });
 
 app.put('/todos', async (req, res) => {
+    let uuid = crypto.randomUUID();
     let newTodo = {
         "date": req.body.date,
         "text": req.body.text,
         "status": req.body.status,
+        "uuid": uuid,
     };
     fs.readFile(todoDb, 'utf-8', (err, data) => {
         let todos = JSON.parse(data);
         todos.push(newTodo);
         fs.writeFileSync(todoDb, JSON.stringify(todos, null, 4));
-        res.status(200).end();
+        res.send(uuid);
     })
 });
 //#endregion Controller

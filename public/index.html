@@ -50,6 +50,7 @@
                     else if (todo.status == 1) elem.innerText = "ℹ️ ";
                     else if (todo.status == 0) elem.innerText = "⭕ ";
                     elem.innerText += todo.text;
+                    elem.dataset.uuid = todo.uuid;
                     todoViewer.appendChild(elem);
                 }
             }
@@ -69,7 +70,7 @@
                 elem.innerText = `⭕ ${text}`;
                 todoViewer.appendChild(elem);
                 
-                await fetch(new Request('./todos', {
+                let uuid = await fetch(new Request('./todos', {
                     method: "PUT",
                     body: JSON.stringify({
                         date: todoDate.value,
@@ -77,7 +78,8 @@
                         status: 0,
                     }),
                     headers: { 'Content-Type': 'application/json'},
-                }));
+                })).then(res => res.text());
+                elem.dataset.uuid = uuid;
             }
         </script>
         <script>
