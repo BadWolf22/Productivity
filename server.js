@@ -52,6 +52,15 @@ app.put('/todos', async (req, res) => {
         res.send(uuid);
     })
 });
+
+app.delete('/todos/:uuid', (req, res) => {
+    let uuid = req.params.uuid;
+    fs.readFile(todoDb, 'utf-8', (err, data) => {
+        let todos = JSON.parse(data).filter(todo => todo.uuid != uuid);
+        fs.writeFileSync(todoDb, JSON.stringify(todos, null, 4));
+        res.send(uuid);
+    })
+});
 //#endregion Controller
 
 app.listen(port, () => {

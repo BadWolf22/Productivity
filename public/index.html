@@ -45,14 +45,25 @@
             async function showTodos(todos) {
                 todoViewer.innerHTML = `<h1>${todos.date}</h1>`;
                 for (let todo of todos.todos) {
-                    let elem = document.createElement("p");
-                    if (todo.status == 2) elem.innerText = "✅ ";
-                    else if (todo.status == 1) elem.innerText = "ℹ️ ";
-                    else if (todo.status == 0) elem.innerText = "⭕ ";
-                    elem.innerText += todo.text;
-                    elem.dataset.uuid = todo.uuid;
-                    todoViewer.appendChild(elem);
+                    todoViewer.appendChild(todoElement(todo.text, todo.status, todo.uuid));
                 }
+            }
+
+            function todoElement(text, status, uuid) {
+                let elem = document.createElement("p");
+                if (status == 2) elem.innerText = "✅ ";
+                else if (status == 1) elem.innerText = "ℹ️ ";
+                else if (status == 0) elem.innerText = "⭕ ";
+                elem.innerText += text;
+                elem.dataset.uuid = uuid;
+
+                let delButton = document.createElement("input");
+                delButton.type = "button";
+                delButton.value = "🗑️";
+                delButton.onclick = () => deleteTodo(elem);
+                elem.appendChild(delButton);
+
+                return elem;
             }
 
             function setLoading(id, asyncLambda) {
@@ -66,8 +77,7 @@
                 if (text.trim() == "") return;
                 todoInput.value = "";
 
-                let elem = document.createElement("p");
-                elem.innerText = `⭕ ${text}`;
+                let elem = todoElement(text, 0, null);
                 todoViewer.appendChild(elem);
                 
                 let uuid = await fetch(new Request('./todos', {
@@ -80,6 +90,17 @@
                     headers: { 'Content-Type': 'application/json'},
                 })).then(res => res.text());
                 elem.dataset.uuid = uuid;
+            }
+
+            async function deleteTodo(elem) {
+                let uuid = elem.dataset.uuid;
+
+                todoViewer.removeChild(elem);
+
+                let req = new Request(`./todos/${uuid}`, {
+                    method: 'DELETE',
+                });
+                await fetch(req);
             }
         </script>
         <script>
