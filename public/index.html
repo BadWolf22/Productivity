@@ -19,9 +19,12 @@
                 if (key == "Enter") {
                     todoSubmit.dispatchEvent(new MouseEvent('click'));
                 }
-            })
+            });
 
             async function getTodoForDate(date) {
+                const params = new URLSearchParams(location.search);
+                params.set("date", date);
+                history.replaceState(null, "", "?" + params.toString())
                 let req = new Request(`./todos?date=${encodeURIComponent(date)}`);
                 let todos = await fetch(req).then(res => res.json());
                 return todos;
@@ -67,7 +70,13 @@
         </script>
         <script>
             let dateInput = document.getElementById("todo_date");
-            dateInput.valueAsDate = new Date();
+            const params = new URLSearchParams(location.search);
+            let selectedDate = params.get("date");
+            if (selectedDate == null) {
+                dateInput.valueAsDate = new Date();
+            } else {
+                dateInput.value = selectedDate;
+            }
             const event = new Event('change', { bubbles: true });
             dateInput.dispatchEvent(event);
         </script>
