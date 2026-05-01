@@ -20,6 +20,7 @@ liveReloadServer.server.once("connection", () => {
 //#endregion DEV STUFF
 
 app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.json());
 
 const todoDb = path.join(__dirname, 'db', 'todo.json');
 let dbExists = fs.existsSync(todoDb);
@@ -34,6 +35,20 @@ app.get('/todos', async (req, res) => {
         let filtered = todos.filter(todo => todo.date == req.query.date);
         res.send({ date:req.query.date, todos:filtered });
     });
+});
+
+app.put('/todos', async (req, res) => {
+    let newTodo = {
+        "date": req.body.date,
+        "text": req.body.text,
+        "status": req.body.status,
+    };
+    fs.readFile(todoDb, 'utf-8', (err, data) => {
+        let todos = JSON.parse(data);
+        todos.push(newTodo);
+        fs.writeFileSync(todoDb, JSON.stringify(todos, null, 4));
+        res.status(200).end();
+    })
 });
 //#endregion Controller
 

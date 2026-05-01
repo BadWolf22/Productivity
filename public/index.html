@@ -6,12 +6,20 @@
     <body>
         <input id="todo_date" type="date" onchange="setLoading('todo_viewer', getTodoForDate(this.value).then(showTodos))"/>
         <div id="todo_viewer"></div>
-        <input id="todo_input" type="text"/>
+        <input id="todo_input" type="text" />
         <input id="todo_submit" type="button" value="Create!" onclick="submitTodo()"/>
         
         <script>
+            const todoDate = document.getElementById("todo_date");
             const todoViewer = document.getElementById("todo_viewer");
             const todoInput = document.getElementById("todo_input");
+            const todoSubmit = document.getElementById("todo_submit");
+
+            todoInput.addEventListener('keyup', ({key}) => {
+                if (key == "Enter") {
+                    todoSubmit.dispatchEvent(new MouseEvent('click'));
+                }
+            })
 
             async function getTodoForDate(date) {
                 let req = new Request(`./todos?date=${encodeURIComponent(date)}`);
@@ -37,14 +45,24 @@
                 asyncLambda();
             }
 
-            function submitTodo() {
+            async function submitTodo() {
                 let text = todoInput.value;
                 if (text.trim() == "") return;
                 todoInput.value = "";
-                // TODO: put to server
+
                 let elem = document.createElement("p");
                 elem.innerText = `⭕ ${text}`;
                 todoViewer.appendChild(elem);
+                
+                await fetch(new Request('./todos', {
+                    method: "PUT",
+                    body: JSON.stringify({
+                        date: todoDate.value,
+                        text: text,
+                        status: 0,
+                    }),
+                    headers: { 'Content-Type': 'application/json'},
+                }));
             }
         </script>
         <script>
