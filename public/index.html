@@ -51,17 +51,37 @@
 
             function todoElement(text, status, uuid) {
                 let elem = document.createElement("p");
-                if (status == 2) elem.innerText = "✅ ";
-                else if (status == 1) elem.innerText = "ℹ️ ";
-                else if (status == 0) elem.innerText = "⭕ ";
-                elem.innerText += text;
                 elem.dataset.uuid = uuid;
+
+                let statusDisplay = statusSpan(elem, status)
+                elem.appendChild(statusDisplay);
+
+                let textSpan = document.createElement("span");
+                textSpan.innerText = text;
+                elem.appendChild(textSpan);
 
                 let delButton = document.createElement("input");
                 delButton.type = "button";
                 delButton.value = "🗑️";
                 delButton.onclick = () => deleteTodo(elem);
                 elem.appendChild(delButton);
+
+                return elem;
+            }
+
+            function statusSpan(parent, status) {
+                let elem = document.createElement("span");
+                if (status == 2) elem.innerText = "✅";
+                else if (status == 1) elem.innerText = "ℹ️";
+                else if (status == 0) elem.innerText = "⭕";
+                else elem.innerText = "🤔";
+
+                elem.onclick = () => {
+                    let newStatus = (status + 1) % 3;
+                    let newElem = statusSpan(parent, newStatus);
+                    parent.replaceChild(newElem, elem);
+                    updateTodoStatus(parent, newStatus);
+                };
 
                 return elem;
             }
@@ -90,6 +110,16 @@
                     headers: { 'Content-Type': 'application/json'},
                 })).then(res => res.text());
                 elem.dataset.uuid = uuid;
+            }
+
+            async function updateTodoStatus(elem, status) {
+                let uuid = elem.dataset.uuid;
+                let req = new Request(`./todos/${uuid}`, {
+                    method: 'PATCH',
+                    body: status,
+                    headers: { 'Content-Type': 'text/plain'},
+                });
+                await fetch(req);
             }
 
             async function deleteTodo(elem) {

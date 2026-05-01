@@ -21,6 +21,7 @@ liveReloadServer.server.once("connection", () => {
 
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.json());
+app.use(express.text({ type: 'text/plain' }));
 
 const todoDb = path.join(__dirname, 'db', 'todo.json');
 let dbExists = fs.existsSync(todoDb);
@@ -50,7 +51,23 @@ app.put('/todos', async (req, res) => {
         todos.push(newTodo);
         fs.writeFileSync(todoDb, JSON.stringify(todos, null, 4));
         res.send(uuid);
-    })
+    });
+});
+
+app.patch('/todos/:uuid', (req, res) => {
+    let uuid = req.params.uuid;
+    let newStatus = parseInt(req.body);
+    fs.readFile(todoDb, 'utf-8', (err, data) => {
+        let todos = JSON.parse(data);
+        for (let todo of todos) {
+            if (todo.uuid == uuid) {
+                todo.status = newStatus;
+                break;
+            }
+        }
+        fs.writeFileSync(todoDb, JSON.stringify(todos, null, 4));
+        res.status(200).end();
+    });
 });
 
 app.delete('/todos/:uuid', (req, res) => {
