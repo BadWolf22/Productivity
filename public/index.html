@@ -4,7 +4,11 @@
         <title>✅ToDone</title>
     </head>
     <body>
+        <input type="button" value="<<" onclick="moveDays(-7)"/>
+        <input type="button" value="<" onclick="moveDays(-1)"/>
         <input id="todo_date" type="date" onchange="setLoading('todo_viewer', getTodoForDate(this.value).then(showTodos))"/>
+        <input type="button" value=">" onclick="moveDays(1)"/>
+        <input type="button" value=">>" onclick="moveDays(7)"/>
         <div id="todo_viewer"></div>
         <input id="todo_input" type="text" />
         <input id="todo_submit" type="button" value="Create!" onclick="submitTodo()"/>
@@ -28,6 +32,14 @@
                 let req = new Request(`./todos?date=${encodeURIComponent(date)}`);
                 let todos = await fetch(req).then(res => res.json());
                 return todos;
+            }
+
+            function moveDays(deltaDays) {
+                let currDate = new Date(dateInput.valueAsDate);
+                currDate.setDate(currDate.getDate() + deltaDays);
+                dateInput.valueAsDate = new Date(currDate);
+                const event = new Event('change', { bubbles: true });
+                dateInput.dispatchEvent(event);
             }
 
             async function showTodos(todos) {
