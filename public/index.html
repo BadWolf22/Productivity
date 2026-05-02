@@ -9,6 +9,7 @@
         <input id="todo_date" type="date" onchange="setLoading('todo_viewer', getTodoForDate(this.value).then(showTodos))"/>
         <input type="button" value=">" onclick="moveDays(1)"/>
         <input type="button" value=">>" onclick="moveDays(7)"/>
+        <input type="button" value="Today" onclick="moveDays(null)"/>
         <div id="todo_viewer"></div>
         <input id="todo_input" type="text" />
         <input id="todo_submit" type="button" value="Create!" onclick="submitTodo()"/>
@@ -35,29 +36,49 @@
             }
 
             function moveDays(deltaDays) {
-                let currDate = new Date(dateInput.valueAsDate);
-                currDate.setDate(currDate.getDate() + deltaDays);
-                dateInput.valueAsDate = new Date(currDate);
+                if (deltaDays == null) {
+                    dateInput.valueAsDate = new Date();
+                }
+                else {
+                    let currDate = new Date(dateInput.valueAsDate);
+                    currDate.setDate(currDate.getDate() + deltaDays);
+                    dateInput.valueAsDate = new Date(currDate);
+                }
                 const event = new Event('change', { bubbles: true });
                 dateInput.dispatchEvent(event);
             }
 
             async function showTodos(todos) {
-                todoViewer.innerHTML = `<h1>${todos.date}</h1>`;
-                for (let todo of todos.todos) {
-                    todoViewer.appendChild(todoElement(todo.text, todo.status, todo.uuid));
+                todoViewer.innerHTML = "";
+                if (todos.length == 0) {
+                    todoViewer.appendChild(new dateElement(todoDate.value));
+                }
+
+                let curDate = undefined;
+                for (let todo of todos) {
+                    if (curDate == undefined || todo.date != curDate[0]) {
+                        curDate = [todo.date, dateElement(todo.date)];
+                        todoViewer.appendChild(curDate[1]);
+                    }
+                    curDate[1].appendChild(todoElement(todo, curDate[1]));
                 }
             }
 
-            function todoElement(text, status, uuid) {
-                let elem = document.createElement("p");
-                elem.dataset.uuid = uuid;
+            function dateElement(date) {
+                let elem = document.createElement("div");
+                elem.innerHTML = `<h1>${date}</h1>`;
+                return elem;
+            }
 
-                let statusDisplay = statusSpan(elem, status)
+            function todoElement(todo, parent) {
+                let elem = document.createElement("p");
+                elem.dataset.uuid = todo.uuid;
+
+                let statusDisplay = statusSpan(todo);
                 elem.appendChild(statusDisplay);
 
                 let textSpan = document.createElement("span");
-                textSpan.innerText = text;
+                textSpan.innerText = todo.text;
                 elem.appendChild(textSpan);
 
                 let delButton = document.createElement("input");
@@ -69,18 +90,25 @@
                 return elem;
             }
 
-            function statusSpan(parent, status) {
+            function statusSpan(todo) {
+                let dateTimeCompleted = todo.dateTimeCompleted == null ? null : new Date(todo.dateTimeCompleted);
+                let maxCompleteDate = new Date(todoDate.valueAsDate);
+                maxCompleteDate.setDate(maxCompleteDate.getDate() + 1);
                 let elem = document.createElement("span");
-                if (status == 2) elem.innerText = "✅";
-                else if (status == 1) elem.innerText = "ℹ️";
-                else if (status == 0) elem.innerText = "⭕";
+                if (todo.status == 2) {
+                    if (dateTimeCompleted < maxCompleteDate) elem.innerText = "✅";
+                    else elem.innerText = "ℹ️";
+                }
+                else if (todo.status == 1) elem.innerText = "ℹ️";
+                else if (todo.status == 0) elem.innerText = "⭕";
                 else elem.innerText = "🤔";
 
                 elem.onclick = () => {
-                    let newStatus = (status + 1) % 3;
-                    let newElem = statusSpan(parent, newStatus);
-                    parent.replaceChild(newElem, elem);
-                    updateTodoStatus(parent, newStatus);
+                    let newStatus = (todo.status + 1) % 3;
+                    todo.status = newStatus;
+                    let newElem = statusSpan(todo);
+                    elem.replaceWith(newElem);
+                    updateTodoStatus(todo.uuid, newStatus);
                 };
 
                 return elem;
@@ -97,23 +125,25 @@
                 if (text.trim() == "") return;
                 todoInput.value = "";
 
-                let elem = todoElement(text, 0, null);
-                todoViewer.appendChild(elem);
+                let dateViewer = todoViewer.lastChild;
+                let todo = {
+                    date: todoDate.value,
+                    text: text,
+                    status: 0,
+                };
+                let elem = todoElement(todo, dateViewer);
+                dateViewer.appendChild(elem);
                 
                 let uuid = await fetch(new Request('./todos', {
                     method: "PUT",
-                    body: JSON.stringify({
-                        date: todoDate.value,
-                        text: text,
-                        status: 0,
-                    }),
+                    body: JSON.stringify(todo),
                     headers: { 'Content-Type': 'application/json'},
                 })).then(res => res.text());
                 elem.dataset.uuid = uuid;
+                todo.uuid = uuid;
             }
 
-            async function updateTodoStatus(elem, status) {
-                let uuid = elem.dataset.uuid;
+            async function updateTodoStatus(uuid, status) {
                 let req = new Request(`./todos/${uuid}`, {
                     method: 'PATCH',
                     body: status,
@@ -125,7 +155,7 @@
             async function deleteTodo(elem) {
                 let uuid = elem.dataset.uuid;
 
-                todoViewer.removeChild(elem);
+                elem.remove();
 
                 let req = new Request(`./todos/${uuid}`, {
                     method: 'DELETE',

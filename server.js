@@ -33,8 +33,10 @@ if (!dbExists) {
 app.get('/todos', async (req, res) => {
     fs.readFile(todoDb, 'utf-8', (err, data) => {
         let todos = JSON.parse(data);
-        let filtered = todos.filter(todo => todo.date == req.query.date);
-        res.send({ date:req.query.date, todos:filtered });
+        let filtered = todos
+            .filter(todo => (todo.date < req.query.date && (todo.dateTimeCompleted == null || todo.dateTimeCompleted > req.query.date)) || todo.date == req.query.date)
+            .sort((x, y) => x.date > y.date);
+        res.send(filtered);
     });
 });
 
@@ -45,6 +47,8 @@ app.put('/todos', async (req, res) => {
         "text": req.body.text,
         "status": req.body.status,
         "uuid": uuid,
+        "dateTimeCompleted": null,
+        "progressTrack": [],
     };
     fs.readFile(todoDb, 'utf-8', (err, data) => {
         let todos = JSON.parse(data);
@@ -62,6 +66,12 @@ app.patch('/todos/:uuid', (req, res) => {
         for (let todo of todos) {
             if (todo.uuid == uuid) {
                 todo.status = newStatus;
+                if (newStatus == 2) {
+                    todo.dateTimeCompleted = new Date();
+                }
+                if (newStatus > 0) {
+                    todo.progressTrack.push(new Date());
+                }
                 break;
             }
         }
